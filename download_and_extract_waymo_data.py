@@ -11,7 +11,7 @@ def download_and_extract_data(split, dataset_version, out_dir):
 
     for seg_id in range(num_segs):
         print(f"Downloading {seg_id}/{num_segs} tar file.")
-        tar_file = f'{split}_{seg_id:.4}.tar'
+        tar_file = f'{split}_{seg_id:04d}.tar'
         tar_url = f'gs://waymo_open_dataset_v_{dataset_version}/{split}/{tar_file}'
         flag = os.system('gsutil cp ' + tar_url + ' ' + out_dir)
         assert flag == 0, 'Failed to download segment %d. Make sure gsutil is installed' % seg_id
@@ -26,7 +26,7 @@ def download_and_extract_data(split, dataset_version, out_dir):
 
 
 if __name__ == "__main__":
-    out_dir = ""
+    out_dir = "temporario"
     split = "training"  # "training" or "validation"
     dataset_version = '1_2_0'
     download_and_extract_data(split, dataset_version, out_dir)
