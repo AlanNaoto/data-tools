@@ -140,31 +140,34 @@ def create_filtered_data(tar_file_path, output_dir):
                 Database.add_start_or_finish(frame_name, frame_idx)
         Database.add_start_or_finish(frame_name, frame_idx)
         break  # FIXME ERASEME
-    TarObject.clean_tmp_dir()
+    TarObject.clean_tmp_dir()  # Erases temporary TFRECORD files
 
 
 def download_and_extract_data(split, dataset_version, out_dir):
-    if split == 'training':
-        len_tars = 32
-    elif split == 'validation':
-        len_tars = 8
-    os.makedirs(out_dir, exist_ok=True)
+    splits_len = {"training": 32, "validation": 8}
 
-    for tar_id in range(len_tars):
-        print(f"Downloading {tar_id}/{len_tars} tar file.")
-        tar_filename = f'{split}_{tar_id:04d}.tar'
-        tar_url = f'gs://waymo_open_dataset_v_{dataset_version}/{split}/{tar_filename}'
-        os.system('gsutil cp ' + tar_url + ' ' + out_dir)
-
-        tar_file_path = os.path.join(out_dir, tar_filename)
-        print(f'Working on tar {tar_id}/{len_tars} {split}')
-        create_filtered_data(tar_file_path, os.path.join(out_dir, split))
-        os.remove(tar_file_path)
-        break # FIXME ERASEME
+    for split in splits:
+        out_dir = os.path.join(out_dir, split)
+        os.makedirs(out_dir, exist_ok=True)
+        len_tars = splits_len[split]
+        for tar_id in range(len_tars):
+            print(f"Downloading {tar_id}/{len_tars} tar file.")
+            tar_filename = f'{split}_{tar_id:04d}.tar'
+            tar_url = f'gs://waymo_open_dataset_v_{dataset_version}/{split}/{tar_filename}'
+            os.system('gsutil cp ' + tar_url + ' ' + out_dir)
+    
+            tar_file_path = os.path.join(out_dir, tar_filename)
+            print(f'Working on tar {tar_id}/{len_tars} {split}')
+            create_filtered_data(tar_file_path, os.path.join(out_dir, split))
+            os.remove(tar_file_path)
+            break # FIXME ERASEME
+        break  # FIXME ERASEME
 
 
 if __name__ == "__main__":
     out_dir = "temporario"
-    split = "training"  # "training" or "validation"
     dataset_version = '1_2_0'
-    download_and_extract_data(split, dataset_version, out_dir)
+    splits = ["training", "validation"]
+    download_and_extract_data(split, dataset_version, splits, out_dir)
+
+
