@@ -8,7 +8,7 @@ import json
 import xml.etree.ElementTree as ET
 import glob
 
-START_BOUNDING_BOX_ID = 0#1
+START_BOUNDING_BOX_ID = 0  # 1
 PRE_DEFINE_CATEGORIES = None
 # If necessary, pre-define category and its id
 #  PRE_DEFINE_CATEGORIES = {"aeroplane": 1, "bicycle": 2, "bird": 3, "boat": 4,
@@ -49,10 +49,10 @@ def get_filename_as_int(filename):
 
 def get_categories(xml_files):
     """Generate category name to id mapping from a list of xml files.
-    
+
     Arguments:
         xml_files {list} -- A list of xml file paths.
-    
+
     Returns:
         dict -- category name to id mapping.
     """
@@ -140,24 +140,24 @@ def convert(xml_files, json_file):
 
 
 if __name__ == "__main__":
-    # xml_dir is divided between two specifically for WAYMO, since they already provide separate train and val datasets.
-    # what I am doing here is shuffling everything and then splitting them once more
-    xml_dir_1 = '/home/alan/workspace/Mestrado/dataset/CARLA_1920x1280_skip10/anns_voc'
-    xml_dir_2 = "/home/alan/workspace/Mestrado/dataset/WAYMO_skip10/anns_voc"
-    json_file_train = "/home/alan/workspace/Mestrado/dataset/CARLA_1920x1280_skip10_WAYMO_skip10/anns_coco/train.json"
-    json_file_val = "/home/alan/workspace/Mestrado/dataset/CARLA_1920x1280_skip10_WAYMO_skip10/anns_coco/val.json"
-    json_file_test = "/home/alan/workspace/Mestrado/dataset/CARLA_1920x1280_skip10_WAYMO_skip10/anns_coco/test.json"
+    xml_dir = '/home/alan/workspace/Mestrado/dataset/KITTI/anns_voc'
+    out_dir = "/home/alan/workspace/Mestrado/dataset/KITTI/anns_coco"
+    json_file_train = os.path.join(out_dir, "train.json")
+    json_file_val = os.path.join(out_dir, "val.json")
+    json_file_test = os.path.join(out_dir, "test.json")
     train_split = 0.80
     val_split = 0.10
     test_split = 0.10
 
-    # Make dataset splits
-    xml_files = glob.glob(os.path.join(xml_dir_1, "*.xml")) + glob.glob(os.path.join(xml_dir_2, "*.xml"))
-    xml_files_train = random.sample(xml_files, int(train_split*len(xml_files)))
+    # Split into train, val and test
+    xml_files = glob.glob(os.path.join(xml_dir, "*.xml"))
+    xml_files_train = random.sample(xml_files, int(train_split * len(xml_files)))
     xml_files_val = set(xml_files) - set(xml_files_train)
     xml_files_test = random.sample(xml_files_val, int(test_split*len(xml_files)))
     xml_files_val = set(xml_files_val) - set(xml_files_test)
-
+    
+    os.makedirs(out_dir, exist_ok=True)
+    
     # Perform conversion
     # If you want to do train/test split, you can pass a subset of xml files to convert function.
     convert(xml_files_train, json_file_train)
@@ -168,5 +168,4 @@ if __name__ == "__main__":
 
     convert(xml_files_test, json_file_test)
     print("Success: {}".format(json_file_test))
-
 
