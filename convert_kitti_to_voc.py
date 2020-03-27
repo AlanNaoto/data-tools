@@ -99,8 +99,8 @@ def create_voc_anns(bbs_kitti, imgs_dir, bbs_out_dir):
 
 
 if __name__ == "__main__":
-    imgs_dir = "temporario\\img_temp"
-    bbs_kitti_dir = "temporario\\ann"
-    bbs_out_dir = "temporario\\out"
+    imgs_dir = "/home/alan/workspace/Mestrado/dataset/KITTI/imgs_jpg/train"
+    bbs_kitti_dir = "/home/alan/workspace/Mestrado/dataset/KITTI/anns_raw"
+    bbs_out_dir = "/home/alan/workspace/Mestrado/dataset/KITTI/anns_voc"
     create_voc_anns(bbs_kitti_dir, imgs_dir, bbs_out_dir)
 
