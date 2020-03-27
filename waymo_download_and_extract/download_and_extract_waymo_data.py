@@ -8,7 +8,7 @@ import numpy as np
 import cv2
 from get_data_from_tf_record import get_img_and_bbox, get_lidar_data
 import tensorflow as tf
-tf.enable_eager_execution()
+#tf.enable_eager_execution()
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
 
@@ -165,9 +165,9 @@ def download_and_extract_data(split, dataset_version, out_dir):
 
 
 if __name__ == "__main__":
-    out_dir = "temporario"
+    out_dir = "/home/alan/workspace/temp"
     dataset_version = '1_2_0'
     splits = ["training", "validation"]
-    download_and_extract_data(split, dataset_version, splits, out_dir)
+    download_and_extract_data(splits, dataset_version, out_dir)
 
 
