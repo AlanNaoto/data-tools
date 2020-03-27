@@ -139,7 +139,6 @@ def create_filtered_data(tar_file_path, output_dir):
             if frame_idx == 0:
                 Database.add_start_or_finish(frame_name, frame_idx)
         Database.add_start_or_finish(frame_name, frame_idx)
-        break  # FIXME ERASEME
     TarObject.clean_tmp_dir()  # Erases temporary TFRECORD files
 
 
@@ -158,10 +157,8 @@ def download_and_extract_data(split, dataset_version, out_dir):
     
             tar_file_path = os.path.join(out_dir, tar_filename)
             print(f'Working on tar {tar_id}/{len_tars} {split}')
-            create_filtered_data(tar_file_path, os.path.join(out_dir, split))
+            create_filtered_data(tar_file_path, out_dir)
             os.remove(tar_file_path)
-            break # FIXME ERASEME
-        break  # FIXME ERASEME
 
 
 if __name__ == "__main__":
