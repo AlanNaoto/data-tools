@@ -22,7 +22,8 @@ def create_subset_json(full_json, subset_json, out_json):
 
 
 if __name__ == "__main__":
-    mixed_json = "waymo_and_carla_skip10\\train.json"
-    waymo_skip10_json = "waymo_skip10_train.json"
-    out_json = "new_train.json"
+    split = "test"
+    mixed_json = f"/home/alan/workspace/Mestrado/dataset/CARLA_1920x1280_skip10_WAYMO_skip10/anns_coco/{split}.json"
+    waymo_skip10_json = f"/home/alan/workspace/Mestrado/dataset/WAYMO_skip10/anns_coco/{split}.json"
+    out_json = f"/home/alan/workspace/Mestrado/dataset/CARLA_1920x1280_skip10_WAYMO_skip10/anns_coco/{split}_waymo_subset.json"
     create_subset_json(mixed_json, waymo_skip10_json, out_json)

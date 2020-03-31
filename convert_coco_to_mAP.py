@@ -27,6 +27,6 @@ def convert_coco_bb_to_mAP(json_coco_file, out_dir):
 
 
 if __name__ == "__main__":
-    json_coco_file = "/media/alan/Seagate Expansion Drive/Data/Waymo/transformed_data/anns_bb_coco/waymo_train.json"
-    out_dir = "/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/tools/lixo"
+    json_coco_file = "/home/alan/workspace/Mestrado/dataset/CARLA_1920x1280_skip10_WAYMO_skip10/anns_coco/test.json"
+    out_dir = "/home/alan/workspace/Mestrado/dataset/CARLA_1920x1280_skip10_WAYMO_skip10/anns_mAP"
     convert_coco_bb_to_mAP(json_coco_file, out_dir)

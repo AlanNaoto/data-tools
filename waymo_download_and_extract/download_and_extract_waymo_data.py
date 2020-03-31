@@ -162,7 +162,7 @@ def download_and_extract_data(split, dataset_version, out_dir):
 
 
 if __name__ == "__main__":
-    out_dir = "/home/alan/workspace/temp"
+    out_dir = "/media/aiss-v100/Naotop_1TB/data/WAYMO_v120"
     dataset_version = '1_2_0'
     splits = ["training", "validation"]
     download_and_extract_data(splits, dataset_version, out_dir)
