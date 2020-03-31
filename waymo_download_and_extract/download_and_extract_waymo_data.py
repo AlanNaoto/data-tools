@@ -8,7 +8,7 @@ import numpy as np
 import cv2
 from get_data_from_tf_record import get_img_and_bbox, get_lidar_data
 import tensorflow as tf
-tf.enable_eager_execution()
+#tf.enable_eager_execution()
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
 
@@ -139,7 +139,6 @@ def create_filtered_data(tar_file_path, output_dir):
             if frame_idx == 0:
                 Database.add_start_or_finish(frame_name, frame_idx)
         Database.add_start_or_finish(frame_name, frame_idx)
-        break  # FIXME ERASEME
     TarObject.clean_tmp_dir()  # Erases temporary TFRECORD files
 
 
@@ -158,16 +157,14 @@ def download_and_extract_data(split, dataset_version, out_dir):
     
             tar_file_path = os.path.join(out_dir, tar_filename)
             print(f'Working on tar {tar_id}/{len_tars} {split}')
-            create_filtered_data(tar_file_path, os.path.join(out_dir, split))
+            create_filtered_data(tar_file_path, out_dir)
             os.remove(tar_file_path)
-            break # FIXME ERASEME
-        break  # FIXME ERASEME
 
 
 if __name__ == "__main__":
-    out_dir = "temporario"
+    out_dir = "/home/alan/workspace/temp"
     dataset_version = '1_2_0'
     splits = ["training", "validation"]
-    download_and_extract_data(split, dataset_version, splits, out_dir)
+    download_and_extract_data(splits, dataset_version, out_dir)
 
 

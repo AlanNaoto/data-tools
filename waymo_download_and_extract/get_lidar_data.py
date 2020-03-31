@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-tf.enable_eager_execution()
+#tf.enable_eager_execution()
 
 from waymo_open_dataset.utils import frame_utils
 

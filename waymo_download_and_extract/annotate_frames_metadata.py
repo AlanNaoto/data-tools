@@ -5,7 +5,7 @@ import tempfile
 import sys
 from tqdm import tqdm
 import tensorflow as tf
-tf.enable_eager_execution()
+#tf.enable_eager_execution()
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
 
