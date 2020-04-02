@@ -5,8 +5,8 @@ import glob
 
 
 if __name__ == "__main__":
-    xml_dir = '/media/alan/Seagate Expansion Drive/Data/CARLA_1920x1280/VOC_bbs'
-    out_dir = '/media/alan/Seagate Expansion Drive/Data/CARLA_1920x1280/mAP_gt_bbs'
+    xml_dir = '/home/alan/workspace/Mestrado/dataset/KITTI/anns_voc'
+    out_dir = '/home/alan/workspace/Mestrado/dataset/KITTI/anns_mAP'
 
     xml_files = glob.glob(os.path.join(xml_dir, '*.xml'))
     for file_idx, file in enumerate(xml_files):

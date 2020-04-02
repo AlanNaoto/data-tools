@@ -1,6 +1,7 @@
 import sys
 import os
 import xml.etree.ElementTree as ET
+import cv2
 
 
 def create_xml_file(imgs_input_dir, bb_output_dir, img_name, img_path, frame_width, frame_height, xml_filename, bb_vehicles, bb_pedestrians):
@@ -60,11 +61,9 @@ def create_xml_file(imgs_input_dir, bb_output_dir, img_name, img_path, frame_wid
 
 if __name__ == "__main__":
     # User input
-    bb_input_dir = "/media/alan/Seagate Expansion Drive/Data/Waymo-easier/custom_type/validation/bb"
-    imgs_input_dir = "/media/alan/Seagate Expansion Drive/Data/Waymo-easier/custom_type/validation/rgb"
-    bb_output_dir = "/media/alan/Seagate Expansion Drive/Data/Waymo-easier/voc_type/validation/anns"
-    frame_width = 1920
-    frame_height = 1280
+    bb_input_dir = "/media/aiss-v100/Naotop_1TB/data/WAYMO_v120/anns_custom"
+    imgs_input_dir = "/media/aiss-v100/Naotop_1TB/data/WAYMO_v120/imgs_jpg"
+    bb_output_dir = "/media/aiss-v100/Naotop_1TB/data/WAYMO_v120/anns_voc"
 
     # Finding the data to be treated
     os.makedirs(bb_output_dir, exist_ok=True)
@@ -89,9 +88,13 @@ if __name__ == "__main__":
 
             # Adjust metadata for xml
             frame_name = bb_input_files[bb_file_idx].replace(".txt", "")
-            img_name = frame_name + ".jpeg"
+            img_name = frame_name + ".jpg"
             xml_filename = frame_name + ".xml"
             img_path = os.path.join(os.path.join(imgs_input_dir, img_name))
-
+            # Img dimensions
+            img = cv2.imread(img_path)
+            frame_width = img.shape[1]
+            frame_height = img.shape[0]
+            # Finally create the xml files
             create_xml_file(imgs_input_dir, bb_output_dir, img_name, img_path, frame_width, frame_height, xml_filename, bb_vehicles, bb_pedestrians)
 
