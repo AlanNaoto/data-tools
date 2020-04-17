@@ -25,7 +25,7 @@ def collect_annotations_per_frame(coco_data):
 
 def undersample(args):
     def find_frames_to_keep():
-        # remover da maior diferença para a menor diferença (n_vehics >> n_pedestres)
+        # remover da maior diferenca para a menor diferença (n_vehics >> n_pedestres)
         threshold = [int((1 - args.thresh / 100) * len(coco_data['images'])),
                      int((1 + args.thresh / 100) * len(coco_data['images']))]
         frames_order = [x for x in objects_frame_dict]
@@ -133,14 +133,13 @@ if __name__ == "__main__":
         Method A. Undersampling (removing samples)
         Method B. Oversampling (repeating samples) 
     """
-    parser = argparse.ArgumentParser(description='Create database file for referencing how many samples of each frame'
-                                                 'should be collected')
+    parser = argparse.ArgumentParser(description='Create database file for referencing how many samples of each frame should be collected')
     parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\".")
     parser.add_argument("anns", type=str, help='coco annotations file', default="waymo_skip10_train.json")
     parser.add_argument("out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
     parser.add_argument("--thresh", type=int, default=10,
                         help="sets upper and lower boundaries files creation proportional to len of coco anns file."
-                             "e.g.: --thresh 10 will create a threshold between 90% and 110%")
+                             "e.g.: --thresh 10 will create a threshold between 90%% and 110%%")
     args = parser.parse_args()
 
     assert args.sample_type == "oversample" or args.sample_type == "undersample"
