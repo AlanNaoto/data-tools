@@ -112,10 +112,9 @@ def oversample(args):
             new_coco_data = json.load(f)
 
         print('Copying repeated images and adding repeated annotations. This may take a while.')
-        new_images = copy.deepcopy(new_coco_data['images'])
         for repated_frame_idx, repeated_frame in enumerate(frames_to_add):
             sys.stdout.write("\r")
-            sys.stdout.write(f'Frame {repated_frame_idx}/{len(new_images)}')
+            sys.stdout.write(f'Frame {repated_frame_idx}/{len(frames_to_add)}')
             sys.stdout.flush()
             for original_frame in new_coco_data['images']:
                 if str(repeated_frame) in str(original_frame['id']):  # Remember that an additional index number was added at the end of the repeated filename
