@@ -93,7 +93,7 @@ def oversample(args):
         new_pedestrian_counts = sum(pedestrian_counts)
         frames_to_add = []
         while True:
-            for frame in frames_more_pedestrians:
+            for count, frame in enumerate(frames_more_pedestrians):
                 if new_pedestrian_counts > new_vehicle_counts * args.thresh / 100:
                     break
                 frames_to_add.append(frame)
@@ -110,28 +110,28 @@ def oversample(args):
         with open(args.out, 'r') as f:
             new_coco_data = json.load(f)
 
-        new_images = [x for x in new_coco_data['images'] if x['id'] in frames_to_add]
         print('Copying repeated images and adding repeated annotations. This may take a while.')
-        for entry_idx, entry in enumerate(new_images):
+        new_images = copy.deepcopy(new_coco_data['images'])
+        for repated_frame_idx, repeated_frame in enumerate(frames_to_add):
             sys.stdout.write("\r")
-            sys.stdout.write(f'Img {entry_idx}/{len(new_images)}')
+            sys.stdout.write(f'Frame {repated_frame_idx}/{len(new_images)}')
             sys.stdout.flush()
+            for original_frame in new_coco_data['images']:
+                if str(repeated_frame) in str(original_frame['id']):  # Remember that an additional index number was added at the end of the repeated filename
+                    # Re-adding image metadata (and creating img)
+                    repeated_frame_metadata = copy.deepcopy(original_frame)
+                    repeated_frame_metadata['file_name'] = f"{repeated_frame}.jpg"
+                    repeated_frame_metadata['id'] = repeated_frame
+                    new_coco_data['images'].append(repeated_frame_metadata)
+                    shutil.copy(os.path.join(args.img_in_dir, original_frame['file_name']),
+                                os.path.join(args.img_out_dir, repeated_frame_metadata['file_name']))
 
-            # Re-adding images [and also creating new copies]
-            new_entry = copy.deepcopy(entry)
-            old_img_name = new_entry['file_name']
-            new_img_name = f"{new_entry['id']}{entry_idx}"
-            shutil.copy(os.path.join(args.img_in_dir, old_img_name), os.path.join(args.img_out_dir, new_img_name + ".jpg"))
-            new_entry['file_name'] = f"{new_img_name}.jpg"
-            new_entry['id'] = int(new_img_name)
-            new_coco_data['images'].append(new_entry)
-
-            # Re-adding annotations
-            for ann in new_coco_data['annotations']:
-                if ann['image_id'] == old_img_name:
-                    new_ann = copy.deepcopy(ann)
-                    new_ann['image_id'] = int(new_img_name)
-                    new_coco_data['annotations'].append(new_ann)
+                    # Re-adding annotations pertaining to the repeated frame
+                    for ann in new_coco_data['annotations']:
+                        if ann['image_id'] == original_frame['file_name']:
+                            new_ann = copy.deepcopy(ann)
+                            new_ann['image_id'] = int(repeated_frame_metadata['file_name'])
+                            new_coco_data['annotations'].append(new_ann)
 
         with open(args.out, 'w') as f:
             json.dump(new_coco_data, f)
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         Method B. Oversampling (repeating samples) 
     """
     parser = argparse.ArgumentParser(description='Create database file for referencing how many samples of each frame should be collected')
-    parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='undersample')
+    parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='oversample')
     parser.add_argument("anns", type=str, help='coco annotations file', default="/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/anns_coco/waymo_skip10_train.json")
     parser.add_argument("out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
     parser.add_argument("--img_in_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] input images directory", default='/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/imgs_jpg')
