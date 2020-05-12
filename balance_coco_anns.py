@@ -139,6 +139,7 @@ def oversample(args):
                     if new_ann_list:
                         [new_coco_data['annotations'].append(x) for x in new_ann_list]
                     print(len(new_coco_data['annotations']))
+                    # TODO prov consertar algo aqui. new_cocodata[annotations] ta duplicando de tamanho toda hroa
                     continue
 
         with open(args.out, 'w') as f:
@@ -167,9 +168,9 @@ if __name__ == "__main__":
         Method B. Oversampling (repeating samples) 
     """
     parser = argparse.ArgumentParser(description='Create database file for referencing how many samples of each frame should be collected')
-    parser.add_argument("--sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='oversample')
-    parser.add_argument("--anns", type=str, help='coco annotations file', default="/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/anns_coco/waymo_skip10_train.json")
-    parser.add_argument("--out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
+    parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='oversample')
+    parser.add_argument("anns", type=str, help='coco annotations file', default="/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/anns_coco/waymo_skip10_train.json")
+    parser.add_argument("out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
     parser.add_argument("--img_in_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] input images directory", default='/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/imgs_jpg')
     parser.add_argument("--img_out_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] specifies the directory where additional"
                                                         "image files are going to be created", default='test_dir')
