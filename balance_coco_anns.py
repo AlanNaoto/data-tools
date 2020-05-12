@@ -111,7 +111,7 @@ def oversample(args):
             # Re-adding images [and also creating new copies ones]
             old_img_name = entry['file_name']
             new_img_name = f"{entry['id']}{entry_idx}"
-            shutil.copy(os.path.join(args.img_in_dir, old_img_name), os.path.join(args.img_out_dir, new_img_name))
+            shutil.copy(os.path.join(args.img_in_dir, old_img_name), os.path.join(args.img_out_dir, new_img_name + ".jpg"))
             entry['file_name'] = f"{new_img_name}.jpg"
             entry['id'] = int(new_img_name)
             new_coco_data['images'].append(entry)
