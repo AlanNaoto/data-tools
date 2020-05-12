@@ -113,11 +113,14 @@ def oversample(args):
 
         print('Copying repeated images and adding repeated annotations. This may take a while.')
         for repated_frame_idx, repeated_frame in enumerate(frames_to_add):
-            sys.stdout.write("\r")
-            sys.stdout.write(f'Frame {repated_frame_idx}/{len(frames_to_add)}')
-            sys.stdout.flush()
+            # sys.stdout.write("\r")
+            # sys.stdout.write(f'Frame {repated_frame_idx}/{len(frames_to_add)}')
+            # sys.stdout.flush()
+            print(f'Frame {repated_frame_idx}/{len(frames_to_add)}')
+
             for original_frame in new_coco_data['images']:
-                if str(repeated_frame) in str(original_frame['id']):  # Remember that an additional index number was added at the end of the repeated filename
+                # Remember that an additional index number was added at the end of the repeated filename
+                if str(repeated_frame)[0:15] == str(original_frame['id'])[0:15]:
                     # Re-adding image metadata (and creating img)
                     repeated_frame_metadata = copy.deepcopy(original_frame)
                     repeated_frame_metadata['file_name'] = f"{repeated_frame}.jpg"
@@ -127,11 +130,16 @@ def oversample(args):
                                 os.path.join(args.img_out_dir, repeated_frame_metadata['file_name']))
 
                     # Re-adding annotations pertaining to the repeated frame
-                    for ann in new_coco_data['annotations']:
-                        if ann['image_id'] == original_frame['file_name']:
-                            new_ann = copy.deepcopy(ann)
-                            new_ann['image_id'] = int(repeated_frame_metadata['file_name'])
-                            new_coco_data['annotations'].append(new_ann)
+                    new_ann_list = []
+                    for original_ann in new_coco_data['annotations']:
+                        if str(original_ann['image_id'])[0:15] == str(repeated_frame)[0:15]:
+                            new_ann = copy.deepcopy(original_ann)
+                            new_ann['image_id'] = repeated_frame_metadata['id']
+                            new_ann_list.append(new_ann)
+                    if new_ann_list:
+                        [new_coco_data['annotations'].append(x) for x in new_ann_list]
+                    print(len(new_coco_data['annotations']))
+                    continue
 
         with open(args.out, 'w') as f:
             json.dump(new_coco_data, f)
@@ -159,9 +167,9 @@ if __name__ == "__main__":
         Method B. Oversampling (repeating samples) 
     """
     parser = argparse.ArgumentParser(description='Create database file for referencing how many samples of each frame should be collected')
-    parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='oversample')
-    parser.add_argument("anns", type=str, help='coco annotations file', default="/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/anns_coco/waymo_skip10_train.json")
-    parser.add_argument("out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
+    parser.add_argument("--sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='oversample')
+    parser.add_argument("--anns", type=str, help='coco annotations file', default="/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/anns_coco/waymo_skip10_train.json")
+    parser.add_argument("--out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
     parser.add_argument("--img_in_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] input images directory", default='/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/imgs_jpg')
     parser.add_argument("--img_out_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] specifies the directory where additional"
                                                         "image files are going to be created", default='test_dir')
