@@ -1,3 +1,4 @@
+import copy
 import os
 import sys
 import shutil
@@ -26,35 +27,35 @@ def collect_annotations_per_frame(coco_data):
 
 
 def undersample(args):
-    def find_frames_to_keep():
-        # remover da maior diferenca para a menor diferença (n_vehics >> n_pedestres)
-        threshold = [int((1 - args.thresh / 100) * len(coco_data['images'])),
-                     int((1 + args.thresh / 100) * len(coco_data['images']))]
-        frames_order = [x for x in objects_frame_dict]
-        vehicle_counts = [objects_frame_dict[x]['vehicle'] for x in objects_frame_dict]
-        pedestrian_counts = [objects_frame_dict[x]['pedestrian'] for x in objects_frame_dict]
-
+    def find_frames_to_exclude():
         # First find what is the difference between vehicles and pedestrians per frame
-        category_difference = []
-        for i in range(len(frames_order)):
-            category_difference.append(vehicle_counts[i] - pedestrian_counts[i])
-        vehicle_ped_difference = sum(category_difference)
+        vehicle_counts = {}
+        pedestrian_counts = {}
+        for frame in objects_frame_dict:
+            vehicles = objects_frame_dict[frame]['vehicle']
+            pedestrians = objects_frame_dict[frame]['pedestrian']
+            vehicle_counts[frame] = vehicles
+            pedestrian_counts[frame] = pedestrians
 
-        # Then begin removing the frames whose difference are the largest, until the amount of vehicles is similar to pedestrians
-        category_difference = list(zip(category_difference, frames_order))
-        category_difference.sort(key=lambda x: x[0])
-        while not (threshold[0] < vehicle_ped_difference < threshold[1]):
-            del category_difference[-1]
-            vehicle_ped_difference = sum(x[0] for x in category_difference)
-        frames_to_keep = [x[1] for x in category_difference]
-        return frames_to_keep
+        frames_to_exclude = []
+        for frame in objects_frame_dict:
+            vehicles = sum(vehicle_counts.values())
+            pedestrians = sum(pedestrian_counts.values())
+            print(f'vehic {vehicles} peds {pedestrians} threshold {vehicles*args.thresh/100}')
+            if pedestrians > vehicles * args.thresh/100:
+                break
+            if objects_frame_dict[frame]['vehicle'] > objects_frame_dict[frame]['pedestrian']:
+                frames_to_exclude.append(frame)
+                del vehicle_counts[frame]
+                del pedestrian_counts[frame]
+        return frames_to_exclude
 
-    def remove_entries_from_new_coco(frames_to_keep):
+    def remove_entries_from_new_coco(frames_to_exclude):
         with open(args.out, 'r') as f:
             new_coco_data = json.load(f)
 
-        new_images = [x for x in new_coco_data['images'] if x['id'] in frames_to_keep]
-        new_anns = [x for x in new_coco_data['annotations'] if x['image_id'] in frames_to_keep]
+        new_images = [x for x in new_coco_data['images'] if x['id'] not in frames_to_exclude]
+        new_anns = [x for x in new_coco_data['annotations'] if x['image_id'] not in frames_to_exclude]
         new_coco_data['images'] = new_images
         new_coco_data['annotations'] = new_anns
         with open(args.out, 'w') as f:
@@ -67,38 +68,46 @@ def undersample(args):
     # Collecting all annotations PER FRAME at first
     objects_frame_dict = collect_annotations_per_frame(coco_data)
     # Removing frames where n_vehicles >> n_pedestrians, trying to keep the balance
-    frames_to_keep = find_frames_to_keep()
-    remove_entries_from_new_coco(frames_to_keep)
+    frames_to_exclude = find_frames_to_exclude()
+    remove_entries_from_new_coco(frames_to_exclude)
 
 
 def oversample(args):
     def find_frames_to_add():
         # First find what is the difference between vehicles and pedestrians per frame
-        frames_order = [x for x in objects_frame_dict]
-        vehicle_counts = [objects_frame_dict[x]['vehicle'] for x in objects_frame_dict]
-        pedestrian_counts = [objects_frame_dict[x]['pedestrian'] for x in objects_frame_dict]
-        category_difference = []
-        for i in range(len(frames_order)):
-            category_difference.append(vehicle_counts[i] - pedestrian_counts[i])
-        vehicle_ped_difference = sum(category_difference)
+        frames_to_consider = []
+        vehicle_counts = []
+        pedestrian_counts = []
+        category_difference = {}
+        for frame in objects_frame_dict:
+            vehicles = objects_frame_dict[frame]['vehicle']
+            pedestrians = objects_frame_dict[frame]['pedestrian']
+            if vehicles < pedestrians:
+                frames_to_consider.append(frame)
+            vehicle_counts.append(vehicles)
+            pedestrian_counts.append(pedestrians)
+            category_difference[frame] = vehicles-pedestrians
 
-        # Then begin adding frames whose difference are the largest,
-        # until the amount of PEDESTRIANS is similar to vehicles
-        threshold = [int((1 - args.thresh / 100) * len(coco_data['images'])),
-                     int((1 + args.thresh / 100) * len(coco_data['images']))]
-        category_difference = list(zip(category_difference, frames_order))
-        category_difference.sort(key=lambda x: x[0])
-        frames_with_more_peds = [x for x in category_difference if x[0] < 0]
-
-        for x in frames_with_more_peds:
-            while not (threshold[0] < vehicle_ped_difference < threshold[1]):
-                category_difference.append(x)
-                vehicle_ped_difference = sum(x[0] for x in category_difference)
-        frames_to_add = [x[1] for x in category_difference]
+        frames_more_pedestrians = [x for x in category_difference if category_difference[x] < 0]
+        new_vehicle_counts = sum(vehicle_counts)
+        new_pedestrian_counts = sum(pedestrian_counts)
+        frames_to_add = []
+        while True:
+            for frame in frames_more_pedestrians:
+                if new_pedestrian_counts > new_vehicle_counts * args.thresh / 100:
+                    break
+                frames_to_add.append(frame)
+                new_vehicle_counts += objects_frame_dict[frame]['vehicle']
+                new_pedestrian_counts += objects_frame_dict[frame]['pedestrian']
+                print('new_vehicle_count', new_vehicle_counts,
+                      'new_pedestrian_count', new_pedestrian_counts,
+                      "minimum pedestrians necessary", new_vehicle_counts * args.thresh / 100)
+            if new_pedestrian_counts > new_vehicle_counts * args.thresh / 100:
+                break
         return frames_to_add
 
     def add_entries_to_new_coco(frames_to_add):
-        with open(args.anns, 'r') as f:
+        with open(args.out, 'r') as f:
             new_coco_data = json.load(f)
 
         new_images = [x for x in new_coco_data['images'] if x['id'] in frames_to_add]
@@ -108,25 +117,25 @@ def oversample(args):
             sys.stdout.write(f'Img {entry_idx}/{len(new_images)}')
             sys.stdout.flush()
 
-            # Re-adding images [and also creating new copies ones]
-            old_img_name = entry['file_name']
-            new_img_name = f"{entry['id']}{entry_idx}"
+            # Re-adding images [and also creating new copies]
+            new_entry = copy.deepcopy(entry)
+            old_img_name = new_entry['file_name']
+            new_img_name = f"{new_entry['id']}{entry_idx}"
             shutil.copy(os.path.join(args.img_in_dir, old_img_name), os.path.join(args.img_out_dir, new_img_name + ".jpg"))
-            entry['file_name'] = f"{new_img_name}.jpg"
-            entry['id'] = int(new_img_name)
-            new_coco_data['images'].append(entry)
+            new_entry['file_name'] = f"{new_img_name}.jpg"
+            new_entry['id'] = int(new_img_name)
+            new_coco_data['images'].append(new_entry)
 
             # Re-adding annotations
             for ann in new_coco_data['annotations']:
                 if ann['image_id'] == old_img_name:
-                    new_ann = ann
+                    new_ann = copy.deepcopy(ann)
                     new_ann['image_id'] = int(new_img_name)
                     new_coco_data['annotations'].append(new_ann)
 
         with open(args.out, 'w') as f:
             json.dump(new_coco_data, f)
 
-    # https://github.com/facebookresearch/detectron2/blob/master/detectron2/data/datasets/coco.py#L115
     # Add repeated images and anns to coco file, but with a final idx at the end to differentiate them
     # Data preprocessing
     with open(args.anns, 'r') as f:
@@ -150,15 +159,16 @@ if __name__ == "__main__":
         Method B. Oversampling (repeating samples) 
     """
     parser = argparse.ArgumentParser(description='Create database file for referencing how many samples of each frame should be collected')
-    parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='oversample')
-    parser.add_argument("anns", type=str, help='coco annotations file', default="waymo_skip10_train.json")
+    parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='undersample')
+    parser.add_argument("anns", type=str, help='coco annotations file', default="/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/anns_coco/waymo_skip10_train.json")
     parser.add_argument("out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
     parser.add_argument("--img_in_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] input images directory", default='/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/imgs_jpg')
     parser.add_argument("--img_out_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] specifies the directory where additional"
-                                                        "image files are going to be created", default='output_test')
-    parser.add_argument("--thresh", type=int, default=10,
-                        help="sets upper and lower boundaries files creation proportional to len of coco anns file."
-                             "e.g.: --thresh 10 will create a threshold between 90%% and 110%%")
+                                                        "image files are going to be created", default='test_dir')
+    parser.add_argument("--thresh", type=int, default=100,
+                        help="set proportion of annotations between pedestrians and vehicles;"
+                             "e.g.: --thresh 10 will ensure that the number of pedestrians is at least 10% of vehicles;"
+                             "--thresh 100 will make it so that they are roughly the same")
     args = parser.parse_args()
 
     assert args.sample_type == "oversample" or args.sample_type == "undersample"
