@@ -1,4 +1,6 @@
 import os
+import sys
+import shutil
 import argparse
 import json
 from shutil import copyfile
@@ -100,18 +102,32 @@ def oversample(args):
             new_coco_data = json.load(f)
 
         new_images = [x for x in new_coco_data['images'] if x['id'] in frames_to_add]
+        print('Copying repeated images and adding repeated annotations. This may take a while.')
         for entry_idx, entry in enumerate(new_images):
-            # Note: this is only safe because I know that the old ids are based on UNIX timestamp and thus are not
-            # going to overwrite older ids
-            entry['id'] = entry_idx
+            sys.stdout.write("\r")
+            sys.stdout.write(f'Img {entry_idx}/{len(new_images)}')
+            sys.stdout.flush()
+
+            # Re-adding images [and also creating new copies ones]
+            old_img_name = entry['file_name']
+            new_img_name = f"{entry['id']}{entry_idx}"
+            shutil.copy(os.path.join(args.img_in_dir, old_img_name), os.path.join(args.img_out_dir, new_img_name))
+            entry['file_name'] = f"{new_img_name}.jpg"
+            entry['id'] = int(new_img_name)
             new_coco_data['images'].append(entry)
+
+            # Re-adding annotations
+            for ann in new_coco_data['annotations']:
+                if ann['image_id'] == old_img_name:
+                    new_ann = ann
+                    new_ann['image_id'] = int(new_img_name)
+                    new_coco_data['annotations'].append(new_ann)
 
         with open(args.out, 'w') as f:
             json.dump(new_coco_data, f)
 
     # https://github.com/facebookresearch/detectron2/blob/master/detectron2/data/datasets/coco.py#L115
-    # Add more "images" to coco file. Reference the same file_name, but get a different id
-    # Also, create "duplicate" annotations which refer to the different id for that duplicated image
+    # Add repeated images and anns to coco file, but with a final idx at the end to differentiate them
     # Data preprocessing
     with open(args.anns, 'r') as f:
         coco_data = json.load(f)
@@ -128,15 +144,18 @@ if __name__ == "__main__":
     Context: We have many bounding box annotations, however the total for each class is imbalanced.
     On my master's case, WAYMO on dataset vehicles appear up to 10 times more than pedestrians. Therefore, when training
     a detector on it, it becomes very biased to the vehicles class. To solve that, two options are possible:
-    adding weights to the classes in the detector itself; hard mining pedestrians samples.
+    adding weights to the classes in the detector itself or hard mining pedestrians samples.
     On this script, I am doing the second by:
         Method A. Undersampling (removing samples)
         Method B. Oversampling (repeating samples) 
     """
     parser = argparse.ArgumentParser(description='Create database file for referencing how many samples of each frame should be collected')
-    parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\".")
+    parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='oversample')
     parser.add_argument("anns", type=str, help='coco annotations file', default="waymo_skip10_train.json")
     parser.add_argument("out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
+    parser.add_argument("--img_in_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] input images directory", default='/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/imgs_jpg')
+    parser.add_argument("--img_out_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] specifies the directory where additional"
+                                                        "image files are going to be created", default='output_test')
     parser.add_argument("--thresh", type=int, default=10,
                         help="sets upper and lower boundaries files creation proportional to len of coco anns file."
                              "e.g.: --thresh 10 will create a threshold between 90%% and 110%%")
