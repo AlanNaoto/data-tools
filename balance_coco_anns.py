@@ -167,7 +167,7 @@ if __name__ == "__main__":
                                                         "image files are going to be created", default='test_dir')
     parser.add_argument("--thresh", type=int, default=100,
                         help="set proportion of annotations between pedestrians and vehicles;"
-                             "e.g.: --thresh 10 will ensure that the number of pedestrians is at least 10% of vehicles;"
+                             "e.g.: --thresh 10 will ensure that the number of pedestrians is at least 10%% of vehicles;"
                              "--thresh 100 will make it so that they are roughly the same")
     args = parser.parse_args()
 
