@@ -98,7 +98,7 @@ def oversample(args):
         return frames_to_add
 
     def add_entries_to_new_coco(frames_to_add):
-        with open(args.out, 'r') as f:
+        with open(args.anns, 'r') as f:
             new_coco_data = json.load(f)
 
         new_images = [x for x in new_coco_data['images'] if x['id'] in frames_to_add]
