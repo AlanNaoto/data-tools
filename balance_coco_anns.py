@@ -104,6 +104,7 @@ def oversample(args):
                       "minimum pedestrians necessary", new_vehicle_counts * args.thresh / 100)
             if new_pedestrian_counts > new_vehicle_counts * args.thresh / 100:
                 break
+        print(f"{len(frames_to_add)} frames should be repeated.")
         return frames_to_add
 
     def add_entries_to_new_coco(frames_to_add):
