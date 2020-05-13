@@ -143,7 +143,7 @@ def oversample(args):
             sys.stdout.write(f'Creating new images {img_idx}/{len(new_coco_data_images)}')
             sys.stdout.flush()
             new_coco_data['images'].append(new_img_data)
-            original_img_filename = str(new_img_data['id'][0:15]) + ".jpg"
+            original_img_filename = str(new_img_data['id'])[0:15] + ".jpg"
             shutil.copy(os.path.join(args.img_in_dir, original_img_filename),
                         os.path.join(args.img_out_dir, new_img_data['file_name']))
         for new_ann_data in new_ann_list:
