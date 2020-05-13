@@ -108,40 +108,46 @@ def oversample(args):
         return frames_to_add
 
     def add_entries_to_new_coco(frames_to_add):
-        with open(args.out, 'r') as f:
-            new_coco_data = json.load(f)
+        with open(args.anns, 'r') as f:
+            old_coco_data = json.load(f)
 
+        # First gather all new data to be added, only after this increment to coco file
         print('Copying repeated images and adding repeated annotations. This may take a while.')
-        for repated_frame_idx, repeated_frame in enumerate(frames_to_add):
-            # sys.stdout.write("\r")
-            # sys.stdout.write(f'Frame {repated_frame_idx}/{len(frames_to_add)}')
-            # sys.stdout.flush()
-            print(f'Frame {repated_frame_idx}/{len(frames_to_add)}')
-
-            for original_frame in new_coco_data['images']:
+        new_coco_data_images = []
+        new_ann_list = []
+        for repated_frame_idx, oversample_frames in enumerate(frames_to_add):
+            sys.stdout.write("\r")
+            sys.stdout.write(f'Getting frame and annotations metadata {repated_frame_idx}/{len(frames_to_add)}')
+            sys.stdout.flush()
+            for original_frame in old_coco_data['images']:
                 # Remember that an additional index number was added at the end of the repeated filename
-                if str(repeated_frame)[0:15] == str(original_frame['id'])[0:15]:
+                # unix timestamp length is 15 digits, so everything that comes after is the additional idx
+                if str(oversample_frames)[0:15] == str(original_frame['id'])[0:15]:
                     # Re-adding image metadata (and creating img)
                     repeated_frame_metadata = copy.deepcopy(original_frame)
-                    repeated_frame_metadata['file_name'] = f"{repeated_frame}.jpg"
-                    repeated_frame_metadata['id'] = repeated_frame
-                    new_coco_data['images'].append(repeated_frame_metadata)
-                    shutil.copy(os.path.join(args.img_in_dir, original_frame['file_name']),
-                                os.path.join(args.img_out_dir, repeated_frame_metadata['file_name']))
+                    repeated_frame_metadata['file_name'] = f"{oversample_frames}.jpg"
+                    repeated_frame_metadata['id'] = oversample_frames
+                    new_coco_data_images.append(repeated_frame_metadata)
 
                     # Re-adding annotations pertaining to the repeated frame
-                    new_ann_list = []
-                    for original_ann in new_coco_data['annotations']:
-                        if str(original_ann['image_id'])[0:15] == str(repeated_frame)[0:15]:
+                    for original_ann in old_coco_data['annotations']:
+                        if str(original_ann['image_id'])[0:15] == str(oversample_frames)[0:15]:
                             new_ann = copy.deepcopy(original_ann)
                             new_ann['image_id'] = repeated_frame_metadata['id']
                             new_ann_list.append(new_ann)
-                    if new_ann_list:
-                        [new_coco_data['annotations'].append(x) for x in new_ann_list]
-                    print(len(new_coco_data['annotations']))
-                    # TODO prov consertar algo aqui. new_cocodata[annotations] ta duplicando de tamanho toda hroa
-                    continue
 
+        # Only now we add new data into COCO and also create the images. Inefficient, but probably safer
+        new_coco_data = copy.deepcopy(old_coco_data)
+        for img_idx, new_img_data in enumerate(new_coco_data_images):
+            sys.stdout.write("\r")
+            sys.stdout.write(f'Creating new images {img_idx}/{len(new_coco_data_images)}')
+            sys.stdout.flush()
+            new_coco_data['images'].append(new_img_data)
+            original_img_filename = str(new_img_data['id'][0:15]) + ".jpg"
+            shutil.copy(os.path.join(args.img_in_dir, original_img_filename),
+                        os.path.join(args.img_out_dir, new_img_data['file_name']))
+        for new_ann_data in new_ann_list:
+            new_coco_data['annotations'].append(new_ann_data)
         with open(args.out, 'w') as f:
             json.dump(new_coco_data, f)
 
