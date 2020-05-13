@@ -122,7 +122,8 @@ def oversample(args):
             for original_frame in old_coco_data['images']:
                 # Remember that an additional index number was added at the end of the repeated filename
                 # unix timestamp length is 15 digits, so everything that comes after is the additional idx
-                if str(oversample_frames)[0:15] == str(original_frame['id'])[0:15]:
+                if str(oversample_frames)[0:16] == str(original_frame['id'])[0:16]:
+                    naotinhho = str(original_frame['id'])[0:16]
                     # Re-adding image metadata (and creating img)
                     repeated_frame_metadata = copy.deepcopy(original_frame)
                     repeated_frame_metadata['file_name'] = f"{oversample_frames}.jpg"
@@ -131,7 +132,7 @@ def oversample(args):
 
                     # Re-adding annotations pertaining to the repeated frame
                     for original_ann in old_coco_data['annotations']:
-                        if str(original_ann['image_id'])[0:15] == str(oversample_frames)[0:15]:
+                        if str(original_ann['image_id'])[0:16] == str(oversample_frames)[0:16]:
                             new_ann = copy.deepcopy(original_ann)
                             new_ann['image_id'] = repeated_frame_metadata['id']
                             new_ann_list.append(new_ann)
@@ -143,7 +144,7 @@ def oversample(args):
             sys.stdout.write(f'Creating new images {img_idx}/{len(new_coco_data_images)}')
             sys.stdout.flush()
             new_coco_data['images'].append(new_img_data)
-            original_img_filename = str(new_img_data['id'])[0:15] + ".jpg"
+            original_img_filename = str(new_img_data['id'])[0:16] + ".jpg"
             shutil.copy(os.path.join(args.img_in_dir, original_img_filename),
                         os.path.join(args.img_out_dir, new_img_data['file_name']))
         for new_ann_data in new_ann_list:
@@ -174,9 +175,9 @@ if __name__ == "__main__":
         Method B. Oversampling (repeating samples) 
     """
     parser = argparse.ArgumentParser(description='Create database file for referencing how many samples of each frame should be collected')
-    parser.add_argument("sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='oversample')
-    parser.add_argument("anns", type=str, help='coco annotations file', default="/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/anns_coco/waymo_skip10_train.json")
-    parser.add_argument("out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
+    parser.add_argument("--sample_type", type=str, help="choose \"oversample\" or \"undersample\"", default='oversample')
+    parser.add_argument("--anns", type=str, help='coco annotations file', default="/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/anns_coco/waymo_skip10_train.json")
+    parser.add_argument("--out", type=str, help="name of new coco annotations file to be created", default="coco_balanced_anns.json")
     parser.add_argument("--img_in_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] input images directory", default='/mnt/6EFE2115FE20D75D/Naoto/UFPR/Mestrado/9_Code/datasets/Waymo/skip10_dataset/imgs_jpg')
     parser.add_argument("--img_out_dir", type=str, help="[ONLY FOR OVERSAMPLE SAMPLE TYPE] specifies the directory where additional"
                                                         "image files are going to be created", default='test_dir')
