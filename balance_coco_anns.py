@@ -134,7 +134,8 @@ def oversample(args):
                         if str(original_ann['image_id'])[0:16] == str(oversample_frames)[0:16]:
                             new_ann = copy.deepcopy(original_ann)
                             new_ann['image_id'] = repeated_frame_metadata['id']
-                            new_ann['id'] = repeated_frame_metadata['id']  # Not ideal, but should work
+                            new_ann_id_start = len(old_coco_data['annotations'])
+                            new_ann['id'] = new_ann_id_start + repated_frame_idx
                             new_ann_list.append(new_ann)
 
         # Only now we add new data into COCO and also create the images. Inefficient, but probably safer
