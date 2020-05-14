@@ -11,7 +11,10 @@ def load_coco_data(json_file):
 
 def create_new_json(carla_data, waymo_data, split, out_dir):
     carla_data['images'] += waymo_data['images']
-    carla_data['annotations'] += waymo_data['annotations']
+    start_ann_id = len(carla_data['annotations'])
+    for ann_idx, ann in enumerate(waymo_data['annotations']):
+        ann['id'] = start_ann_id + ann_idx
+        carla_data['annotations'].append(ann)
     with open(os.path.join(out_dir, split + ".json"), 'w') as f:
         json.dump(carla_data, f)
     print(f"Created {split}.json file")
